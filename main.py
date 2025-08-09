@@ -35,10 +35,8 @@ def request_response(prompt, max_tokens=4096, temperature=0.7):
 def NewChat() :
     name = input(colored(f"{intro} Please, Enter the name of new chat : ",'blue'))
     try :
-        db.execute("INSERT INTO chats(chatname) VALUES (?)", (name,))
-        connection.commit()
-        db.execute(f"CREATE TABLE IF NOT EXISTS '{name}' (you varchar(2048), bot varchar(2048))")
-        connection.commit()
+        db.execute(f"insert into chats() values(?)",(name))
+        db.execute(f"create table {name} (you varchar(2048), bot varchar(2048))")
     except :
         print(colored("ERROR, This chat is already exist.","yellow"))
     # chatting
@@ -67,7 +65,9 @@ def ListChats() :
 def DeleteChat() :
     name = input(colored(f"{intro} Please, Enter the name of chat you want to delete : ",'blue'))
     try :
-        db.execute(f"delete table {name}")
+        db.execute(f"drop table '{name}'")
+        db.execute("delete from chats where chatname =?",(name,)) 
+        print(colored("Chat was deleted successfully.", "green"))
     except :
         print(colored("ERROR, This chat doesn't exist.","yellow"))
 # interact interface with user
