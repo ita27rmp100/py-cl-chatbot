@@ -14,7 +14,7 @@ except :
 
 # vars 
 intro = "# py-cl-chabot -> "
-# Generate a request
+# Generate a request & chat with the bot
 def request_response(prompt, max_tokens=4096, temperature=0.7):
     client = Groq(
         api_key=os.getenv('groq_api'),
@@ -31,15 +31,7 @@ def request_response(prompt, max_tokens=4096, temperature=0.7):
         stream=False,
     )
     return chat_completion.choices[0].message.content
-# options' functions
-def NewChat() :
-    name = input(colored(f"{intro} Please, Enter the name of new chat : ",'blue'))
-    try :
-        db.execute(f"insert into chats() values(?)",(name))
-        db.execute(f"create table {name} (you varchar(2048), bot varchar(2048))")
-    except :
-        print(colored("ERROR, This chat is already exist.","yellow"))
-    # chatting
+def chatting(name) :
     print(colored(f"{intro} bot : ","red") +" Hello, how can I assist you today? ")
     while True :
         you = input(colored(f"{intro} you : ","green"))
@@ -49,9 +41,32 @@ def NewChat() :
         else :
             bot = request_response(you)
             print(colored(f"{intro} bot : ","red") + bot)
-            db.execute(f"insert into {name}(you,bot) values(?,?);",(you,bot))
+            # Use parameterized query for table name
+            db.execute(f"INSERT INTO \"{name}\" (you, bot) VALUES (?, ?);", (you, bot))
+# options' functions
+def NewChat() :
+    name = input(colored(f"{intro} Please, Enter the name of new chat : ",'blue'))
+    try :
+        db.execute("INSERT INTO chats(chatname) VALUES (?)", (name,))
+        db.execute(f"CREATE TABLE \"{name}\" (you varchar(2048), bot varchar(2048))")
+        chatting(name)
+    except:
+        print(colored("ERROR, This chat is already exist.","yellow"))
+    
 def OldChat() :
-    pass
+    name = input(colored(f"{intro} Please, Enter the name of old chat : ",'blue'))
+    try :
+        db.execute(f"SELECT * FROM '{name}'")
+        data = db.fetchall()
+        for msg in data :
+            print(
+                colored(f"{intro} you : ","green")+str(msg[0]+'\n'),
+                colored(f"{intro} bot : ","red")+str(msg[1]+'\n'),
+            )
+    except :
+        print(colored("ERROR, This chat doesn't exist.","yellow"))
+    # chatting
+    chatting(name)
 def ListChats() :
     db.execute("select * from chats")
     data = db.fetchall()
